@@ -48,9 +48,13 @@ l2:
   pop ds                        ; Restore data addr to program header
 
 direct:
+  mov dx, [0x08]
+  mov ax, [0x06]
+  call calc_segment_base
+
   
 
-read_hard_disk_0:                                
+read_hard_disk_0:               ; Read one disk sector                  
   push ax                       ; Store temp var
   push bx
   push cx
@@ -100,5 +104,18 @@ read_hard_disk_0:
   pop ax
 
   ret
+
+calc_segment_base:
+  push dx
+
+  add ax, [cs:phy_base]
+  adc dx, [cs:phy_base + 0x02]
+
+  shr ax, 4
+  rol dx, 4
+
+
+
+
 
 phy_base dd 0x10000
