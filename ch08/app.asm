@@ -1,4 +1,18 @@
 SECTION header vstart=0
+  program_length  dd program_end
+
+  code_entry      dw start                 ; Offset
+                  dd section.code_1.start  ; Seg
+
+  realloc_tbl_len dw (header_end - code_1_segment) / 4  
+
+  code_1_segment  dd section.code_1.start ;[0x0c]
+  code_2_segment  dd section.code_2.start ;[0x10]
+  data_1_segment  dd section.data_1.start ;[0x14]
+  data_2_segment  dd section.data_2.start ;[0x18]
+  stack_segment   dd section.stack.start  ;[0x1c]
+    
+  header_end:                             
 
 SECTION code_1 align=16 vstart=0
 put_string:
@@ -38,6 +52,7 @@ put_char:
 
   cmp cl, 0x0d                  ; Enter?
   jnz .put_0a
+  ; mov ax, bx
   mov bl, 80
   div bl
   mul bl
@@ -75,9 +90,11 @@ put_char:
   mov cx, 80
 
  .cls:
-  mov word [es:bx], 0x720
+  mov word [es:bx], 0x0720
   add bx, 2
   loop .cls
+
+  mov bx, 1920
 
  .set_cursor:
   mov dx, 0x3d4
@@ -108,14 +125,34 @@ start:
   mov sp, stack_end
 
   mov ax, [data_1_segment]
-  mov dx, ax
+  mov ds, ax
 
   mov bx, msg0
   call put_string
 
+  push word [es:code_2_segment]
+  mov ax, begin
+  push ax
+
+  retf
+
+continue:
+  mov ax, [es:data_2_segment]
+  mov ds, ax
+
+  mov bx, msg1
+  call put_string
+
+  jmp $
 
 
-stack_end:
+SECTION code_2 align=16 vstart=0
+begin:
+  push word [es:code_1_segment]
+  mov ax, continue
+  push ax
+
+  retf
 
 SECTION data_1 align=16 vstart=0
 
@@ -123,18 +160,31 @@ SECTION data_1 align=16 vstart=0
        db 'Back at SourceForge and in intensive development! '
        db 'Get the current versions from http://www.nasm.us/.'
        db 0x0d, 0x0a, 0x0d, 0x0a
-       db '  Example code for calculate 1+2+...+1000:',0x0d,0x0a,0x0d,0x0a
-       db '     xor dx,dx',0x0d,0x0a
-       db '     xor ax,ax',0x0d,0x0a
-       db '     xor cx,cx',0x0d,0x0a
-       db '  @@:',0x0d,0x0a
-       db '     inc cx',0x0d,0x0a
-       db '     add ax,cx',0x0d,0x0a
-       db '     adc dx,0',0x0d,0x0a
-       db '     inc cx',0x0d,0x0a
-       db '     cmp cx,1000',0x0d,0x0a
-       db '     jle @@',0x0d,0x0a
-       db '     ... ...(Some other codes)',0x0d,0x0a,0x0d,0x0a
+       db '  Example code for calculate 1+2+...+1000:', 0x0d, 0x0a, 0x0d, 0x0a
+       db '     xor dx, dx', 0x0d, 0x0a
+       db '     xor ax, ax', 0x0d, 0x0a
+       db '     xor cx, cx', 0x0d, 0x0a
+       db '  @@:', 0x0d, 0x0a
+       db '     inc cx', 0x0d, 0x0a
+       db '     add ax, cx', 0x0d, 0x0a
+       db '     adc dx, 0', 0x0d, 0x0a
+       db '     inc cx', 0x0d, 0x0a
+       db '     cmp cx, 1000', 0x0d, 0x0a
+       db '     jle @@', 0x0d, 0x0a
+       db '     ... ...(Some other codes)', 0x0d, 0x0a, 0x0d, 0x0a
        db 0
 
 
+SECTION data_2 align=16 vstart=0
+
+  msg1 db '  The above contents is written by HanwGeek. '
+       db '2020-01-20'
+       db 0
+
+SECTION stack align=16 vstart=0
+  resb 256 
+
+stack_end:
+
+SECTION tail align=16
+program_end:

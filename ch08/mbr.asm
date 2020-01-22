@@ -1,14 +1,15 @@
 app_lba_start equ 100
 
 SECTION mbr align=16 vstart=0x7c00
-
   ; Set stack pointer
+
   mov ax, 0
   mov ss, ax
   mov sp, ax
 
   mov ax, [cs:phy_base]         ; Load app logic seg addr
   mov dx, [cs:phy_base + 0x02]
+  ;shr ax, 4
   mov bx, 16
   div bx                        ; Convert phy addr to ds reg
   mov ds, ax
@@ -33,7 +34,7 @@ l1:
   jz direct
 
   push ds 
-  mov ax, cx                    ; Move sector num left to counter
+  mov cx, ax                    ; Move sector num left to counter
 
 l2:
   mov ax, ds
@@ -75,7 +76,7 @@ read_hard_disk_0:               ; Read one disk sector
 
   mov dx, 0x1f2                 ; Disk io port
   mov al, 1                     ; Read 1 disk sector
-  out ax, al
+  out dx, al
 
   inc dx
   mov ax, si                    ; Get high 16bit sector addr from si
@@ -105,6 +106,9 @@ read_hard_disk_0:               ; Read one disk sector
   cmp al, 0x08
   jnz .waits
 
+  mov cx, 256
+  mov dx, 0x1f0                 ; Command `Get read content`
+
 .readw:                         ; Read data by word to ds:bx
   in ax, dx
   mov [bx], ax
@@ -125,8 +129,8 @@ calc_segment_base:              ; Calulate seg base addr
   adc dx, [cs:phy_base + 0x02]  ; 4 high bit addr
 
   shr ax, 4                     ; right shift 4 bit
-  rol dx, 4                     ; move 4 low bit to high end
-  add dx, 0xf000
+  ror dx, 4                     ; move 4 low bit to high end
+  and dx, 0xf000
   or ax, dx
 
   pop dx
@@ -134,3 +138,7 @@ calc_segment_base:              ; Calulate seg base addr
   ret
 
 phy_base dd 0x10000
+
+
+times 510 - ($ - $$) db 0
+db 0x55, 0xaa
