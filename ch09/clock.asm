@@ -1,3 +1,4 @@
+; =====================================================
 SECTION header vstart=0
   program_length dd program_end
 
@@ -137,13 +138,13 @@ start:
 
   mov al, 0x0c
   out 0x70, al
-  in al, 0x71
+  in al, 0x71                     ; Read RTC
 
   in al, 0xa1
   and al, 0xfe
   out 0xa1, al
 
-  sti
+  sti                             ; Allow interrupt
 
   mov bx, done_msg
   call put_string
