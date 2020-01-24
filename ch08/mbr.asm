@@ -9,7 +9,6 @@ SECTION mbr align=16 vstart=0x7c00
 
   mov ax, [cs:phy_base]         ; Load app logic seg addr
   mov dx, [cs:phy_base + 0x02]
-  ;shr ax, 4
   mov bx, 16
   div bx                        ; Convert phy addr to ds reg
   mov ds, ax

@@ -48,7 +48,7 @@ put_char:
   out dx, al
   mov dx, 0x3d5
   in al, dx
-  mov bx, ax                    ; Get cursor pos tp bx
+  mov bx, ax                    ; Get cursor pos to bx
 
   cmp cl, 0x0d                  ; Enter?
   jnz .put_0a
